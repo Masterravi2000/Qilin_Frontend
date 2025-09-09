@@ -10,7 +10,7 @@ const TopHeaderBar = () => {
       <TextScallingFalse style={styles.name}>Qilin</TextScallingFalse>
       <View style={styles.rightcontainer}>
         <TouchableOpacity activeOpacity={0.5} style={styles.button}>
-          <ShoppingBagIcon/>
+          <ShoppingBagIcon color="#777777"/>
         </TouchableOpacity>
         <TouchableOpacity activeOpacity={0.5} style={styles.button}>
           <MenuIcon />
