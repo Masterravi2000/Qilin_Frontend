@@ -31,13 +31,13 @@ const styles = StyleSheet.create({
         gap: 10, 
         backgroundColor:'white', 
         paddingVertical: 10, 
-        borderTopWidth: 1, 
+        borderTopWidth: 0.5, 
         borderTopColor:'grey'
     },
     wishlistButton:{
         borderWidth: 1, 
         borderColor:'grey', 
-        width:'50%', 
+        paddingHorizontal:'10%', 
         backgroundColor:'white', 
         paddingVertical: 10, 
         flexDirection:'row', 
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
         fontWeight:'500'
     },
     addToBagButton:{
-        width:'50%', 
+        paddingHorizontal:'10%', 
         backgroundColor:'#FE386A', 
         gap: 10, 
         borderRadius: 10, 

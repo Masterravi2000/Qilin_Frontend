@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     },
     selectedText: {
         color: 'white',
-        fontWeight: '400',
+        fontWeight: '500',
     },
     ScrollingView: {
         marginVertical: 10,

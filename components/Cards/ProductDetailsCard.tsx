@@ -8,6 +8,9 @@ import { useRouter } from 'expo-router';
 import ProfileCard from './ProfileCard';
 import GenuineItem from '../Badges/GenuineItem';
 import ShoppingNavBar from '../RequiredNavBars/ShoppingNavBar';
+import DeliveryBoxIcon from '../SvgIcons/SpecialIcons/DeliveryBox';
+import TickMarkIcon from '../SvgIcons/GeneralIcons/TickMark';
+import CashIcon from '../SvgIcons/SpecialIcons/CashIcon';
 
 interface ProductDetailsProps {
     productId: string;
@@ -71,12 +74,30 @@ const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, products
             <View style={styles.SellerDetails}>
                 {/* seller profile section */}
                 <View style={styles.SellerProfileSection}>
-                <TextScallingFalse style={styles.sellerHeadingText}>Seller</TextScallingFalse>
-                <ProfileCard />
+                    <TextScallingFalse style={styles.sellerHeadingText}>Seller</TextScallingFalse>
+                    <ProfileCard />
                 </View>
                 {/* Garantee section */}
                 <View>
                     <GenuineItem />
+                </View>
+            </View>
+            {/* Delivery detail */}
+            <View style={styles.deliveryContainer}>
+                <TextScallingFalse style={styles.DeliveryHeaderText}>Delivery</TextScallingFalse>
+                <View style={styles.DeliveryBlocks}>
+                    <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.AdressText}>49/2 - Green Park, Rajbari, Gorabazar, Dum Dum</TextScallingFalse>
+                </View>
+                <View style={[styles.DeliveryBlocks, styles.ExpectedDateBlock]}>
+                    <DeliveryBoxIcon />
+                    <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.ExpectedDateText}>Expected Time:- Get it by Sun, Sep 14, 2025</TextScallingFalse>
+                </View>
+                <View style={styles.CashOnDeliveryContainer}>
+                    <View style={styles.TickMarkContainer}>
+                        <TickMarkIcon />
+                    </View>
+                    <CashIcon />
+                    <TextScallingFalse style={styles.PayOnDeliveryText}>Pay on Delivery is available</TextScallingFalse>
                 </View>
             </View>
         </View>
@@ -86,101 +107,162 @@ const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, products
 export default React.memo(ProductDetailsCard);
 
 const styles = StyleSheet.create({
-    ProductImageContainer:{
-        width: '100%', 
-        height: 494, 
-        backgroundColor: 'yellow', 
-        marginVertical: 10 
+    ProductImageContainer: {
+        width: '100%',
+        height: 494,
+        backgroundColor: 'yellow',
+        marginVertical: 10
     },
-    TopBarContainer:{
-        zIndex: 10, 
-        width: '100%', 
-        height: 70, 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        paddingHorizontal: 20, 
-        alignItems: 'center' 
+    TopBarContainer: {
+        zIndex: 10,
+        width: '100%',
+        height: 70,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        alignItems: 'center'
     },
-    TopBarButtons:{
+    TopBarButtons: {
         backgroundColor: 'grey',
-        width: 40, 
-        height: 40, 
-        borderRadius: '100%', 
-        justifyContent: 'center', 
-        alignItems: 'center' 
+        width: 40,
+        height: 40,
+        borderRadius: '100%',
+        justifyContent: 'center',
+        alignItems: 'center'
     },
-    TopBarRightSideSection:{
-        flexDirection: 'row', 
-        gap: 10 
+    TopBarRightSideSection: {
+        flexDirection: 'row',
+        gap: 10
     },
-    ImageSection:{
-        width: '100%', 
-        height: '100%', 
-        position: 'absolute', 
-        top: 0 
+    ImageSection: {
+        width: '100%',
+        height: '100%',
+        position: 'absolute',
+        top: 0
     },
-    ProductDetailsSection:{
-        width: '100%', 
-        gap: 1, 
-        paddingHorizontal: 20, 
-        paddingTop: 5 
+    ProductDetailsSection: {
+        width: '100%',
+        gap: 1,
+        paddingHorizontal: 20,
+        paddingTop: 5
     },
-    priceSection:{
-        width: '100%', 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
+    priceSection: {
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
     },
-    priceSectionText:{
-        fontSize: 20, 
-        fontWeight: '500', 
-        color: '#FE386A', 
+    priceSectionText: {
+        fontSize: 20,
+        fontWeight: '500',
+        color: '#FE386A',
     },
-    productName:{
-        fontSize: 19, 
-        fontWeight: '500', 
-        color: 'black' 
+    productName: {
+        fontSize: 19,
+        fontWeight: '500',
+        color: 'black'
     },
-    descriptionText:{
-        color: 'black', 
+    descriptionText: {
+        color: 'black',
         fontSize: 13,
-        fontWeight:'400',
+        fontWeight: '400',
         paddingVertical: 2,
     },
-    specificDetailsContainer:{
+    specificDetailsContainer: {
         width: '100%',
         paddingHorizontal: 16,
         paddingVertical: 10
     },
-    specificDetailsBox:{
-        borderWidth: 1, 
-        borderColor: 'black', 
-        borderRadius: 10, 
-        width: '100%', 
+    specificDetailsBox: {
+        borderWidth: 1,
+        borderColor: 'black',
+        borderRadius: 10,
+        width: '100%',
         paddingVertical: 10,
-        paddingHorizontal: 16, 
-        flexDirection:'row', 
+        paddingHorizontal: 16,
+        flexDirection: 'row',
         gap: 20
     },
-    specificDetailsText:{
-        color: 'black', 
-        fontSize: 13, 
-        fontWeight: '500', 
+    specificDetailsText: {
+        color: 'black',
+        fontSize: 13,
+        fontWeight: '500',
         width: 142
     },
-   SellerDetails:{
-        width:'100%', 
-        paddingHorizontal: 20, 
-        paddingVertical: 4, 
-        flexDirection:'row', 
-        justifyContent:'space-between'
+    SellerDetails: {
+        width: '100%',
+        paddingHorizontal: 20,
+        paddingVertical: 4,
+        flexDirection: 'row',
+        justifyContent: 'space-between'
     },
-    SellerProfileSection:{
+    SellerProfileSection: {
         gap: 4
     },
-    sellerHeadingText:{
-        color:'#3B3B3B', 
-        fontSize: 13, 
-        fontWeight:'500'
+    sellerHeadingText: {
+        color: '#3B3B3B',
+        fontSize: 13,
+        fontWeight: '500'
+    },
+    deliveryContainer: {
+        width: '100%',
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        gap: 10
+    },
+    DeliveryHeaderText: {
+        color: 'black',
+        fontSize: 19,
+        fontWeight: '500',
+    },
+    DeliveryBlocks: {
+        width: '100%',
+        borderRadius: 100,
+        paddingVertical: 7,
+        borderWidth: 1,
+        borderColor: 'black',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    ExpectedDateBlock: {
+        color: 'black',
+        fontSize: 14,
+        fontWeight: '500',
+        paddingVertical: 4,
+        flexDirection: 'row',
+        gap: 10,
+    },
+    AdressText: {
+        color: '#404040',
+        width: '90%',
+        fontSize: 14,
+        fontWeight: '400'
+    },
+    ExpectedDateText: {
+        color: 'black',
+        fontSize: 14,
+        fontWeight: '500',
+        width: '80%',
+    },
+    CashOnDeliveryContainer:{
+        flexDirection: 'row', 
+        alignItems:'center', 
+        gap: 7, 
+        paddingHorizontal: 2
+    },
+    TickMarkContainer:{
+        width: 32, 
+        height: 32, 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        flexDirection: 'row', 
+        borderWidth: 1, 
+        borderColor:'black', 
+        borderRadius: 100
+    },
+    PayOnDeliveryText:{
+        fontSize: 16, 
+        fontWeight: '500', 
+        color: 'black' 
     }
 })

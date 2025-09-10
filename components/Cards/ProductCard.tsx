@@ -3,7 +3,7 @@ import React from 'react'
 import { useRouter } from 'expo-router';
 import TextScallingFalse from '../Texts/TextScallingFalse';
 
-const ProductCard = ({ product }: { product: { id: string; description: string, image: string; name: string; price: string; discount: string; category: string; deliveryTime: string } }) => {
+const ProductCard = ({ product }: { product: { id: string; description?: string, image: string; name: string; price: string; discount: string; category: string; deliveryTime: string } }) => {
     const router = useRouter();
 
     const handlePress = () => {
@@ -22,9 +22,9 @@ const ProductCard = ({ product }: { product: { id: string; description: string, 
             </TouchableOpacity>
             {/* Product Name,catgory and delivery time */}
             <TouchableOpacity onPress={handlePress} activeOpacity={0.5} style={styles.SeccondSection}>
-                <TextScallingFalse style={styles.productNameText}>{product.name}</TextScallingFalse>
-                <TextScallingFalse style={styles.productCategoryText}>{product.category}</TextScallingFalse>
-                <TextScallingFalse style={styles.deliveryTimeText}>{product.deliveryTime}</TextScallingFalse>
+                <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.productNameText}>{product.name}</TextScallingFalse>
+                <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.productCategoryText}>{product.category}</TextScallingFalse>
+                <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.deliveryTimeText}>{product.deliveryTime}</TextScallingFalse>
             </TouchableOpacity>
         </View>
     )
