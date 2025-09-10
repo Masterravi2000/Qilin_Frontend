@@ -18,7 +18,7 @@ const PageThemeView: React.FC<PageThemeViewProps> = ({ children }) => {
   return (
     <SafeAreaView style={styles.SafeArea}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.KeyboardAvoidView}
       >
         {children}

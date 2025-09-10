@@ -7,7 +7,7 @@ const SellLayout = () => {
       initialRouteName="index"
       screenOptions={{
         headerShown: false,
-        animation: "slide_from_right", // or 'slide_from_right', 'fade_from_bottom', etc.
+        animation: "none", // or 'slide_from_right', 'fade_from_bottom', etc.
         contentStyle: {
           backgroundColor: "black",
         },
