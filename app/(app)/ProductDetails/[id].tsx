@@ -15,7 +15,7 @@ const ProductDetailPage = () => {
   const similarProducts = demoProducts.filter((p) => p.id !== id);
 
   return (
-        <PageThemeView>
+    <PageThemeView>
       <FlatList
         data={similarProducts}
         keyExtractor={(item) => item.id}
@@ -31,12 +31,12 @@ const ProductDetailPage = () => {
           </View>
         }
         renderItem={({ item }) => (
-          <View style={{ marginBottom: 12, flexDirection:'row', flexWrap:'wrap'}}>
+          <View style={{ marginBottom: 12, flexDirection: 'row', flexWrap: 'wrap' }}>
             <ProductCard product={item} />
           </View>
         )}
-         numColumns={2}
-         columnWrapperStyle={styles.row}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       />
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 18
   },
-    row: {
+  row: {
     justifyContent: 'space-between',
     paddingHorizontal: 16
   },

@@ -3,19 +3,26 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// import your slices
-// import firstTimeUseReducer from "./slices/firstTimeUseSlice";
 
-const dummyReducer = (state = {}, action: any) => state;
+// import slices
+import productFormReducer from "./slices/productFormSlice";
+
+// import apis
+import { optionalQuestionsApi } from "./api/SellingFormQuestions/optionalQuestions";
+import { writtenQuestionsApi } from "./api/SellingFormQuestions/writtenQuestions";
 
 const rootReducer = combineReducers({
-  dummy: dummyReducer,
+  productForm: productFormReducer, // add here
+
+    // RTK Query reducers
+  [optionalQuestionsApi.reducerPath]: optionalQuestionsApi.reducer,
+  [writtenQuestionsApi.reducerPath]: writtenQuestionsApi.reducer,
 });
 
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-  whitelist: [], // add slices you want persisted
+  whitelist: ["productForm"], // add slices you want persisted
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -25,7 +32,11 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false, // required for redux-persist
-    })
+    }).concat(
+      // RTK Query middleware
+      optionalQuestionsApi.middleware,
+      writtenQuestionsApi.middleware
+    ),
 });
 
 export const persistor = persistStore(store);

@@ -1,56 +1,92 @@
-import { StyleSheet, Image, View, TouchableOpacity, ScrollView } from 'react-native'
-import React from 'react'
+import { StyleSheet, Image, View, NativeSyntheticEvent, NativeScrollEvent, TouchableOpacity, FlatList} from 'react-native'
+import React, { useState } from "react";
 import TextScallingFalse from '../Texts/TextScallingFalse';
-import BackIcon from '../SvgIcons/GeneralIcons/BackIcon';
-import WishListIcon from '../SvgIcons/BottomNavBar/WishList';
-import ShoppingBagIcon from '../SvgIcons/GeneralIcons/ShoppingBagIcon';
 import { useRouter } from 'expo-router';
 import ProfileCard from './ProfileCard';
 import GenuineItem from '../Badges/GenuineItem';
-import ShoppingNavBar from '../RequiredNavBars/ShoppingNavBar';
 import DeliveryBoxIcon from '../SvgIcons/SpecialIcons/DeliveryBox';
 import TickMarkIcon from '../SvgIcons/GeneralIcons/TickMark';
 import CashIcon from '../SvgIcons/SpecialIcons/CashIcon';
+import ProductDetailNavBar from '../RequiredNavBars/ProductDetailNavBar';
 
 interface ProductDetailsProps {
     productId: string;
-    products: Array<any>; // replace with proper type or fetch from demoProducts.ts
+    products: Array<any>;
+    isPreview?: boolean;
 }
 
-const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, products }) => {
+const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, products, isPreview = false}) => {
     const router = useRouter();
     const product = products.find((p) => p.id === productId);
+
+    //useSates
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     if (!product) {
         return <TextScallingFalse>Product not found</TextScallingFalse>;
     }
+
+    //Image Scroll Indicating function
+    const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const index = Math.round(
+            event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width
+        );
+        setCurrentImageIndex(index);
+    };
+
+    const images = product.images && product.images.length ? product.images : [product.image || ''];
 
     return (
         <View>
             {/* Product Image */}
             <View style={styles.ProductImageContainer}>
                 {/* Top Nav Bar */}
-                <View style={styles.TopBarContainer}>
-                    <TouchableOpacity onPress={() => router.back()} activeOpacity={0.5} style={styles.TopBarButtons}>
-                        <BackIcon />
-                    </TouchableOpacity>
-                    <View style={styles.TopBarRightSideSection}>
-                        <TouchableOpacity activeOpacity={0.5} style={styles.TopBarButtons}>
-                            <WishListIcon color="#ffffffff" />
-                        </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.5} style={styles.TopBarButtons}>
-                            <ShoppingBagIcon color="#ffffffff" />
-                        </TouchableOpacity>
+                <ProductDetailNavBar isPreview={isPreview}/>
+                {/* Main Image Component */}
+                <View style={styles.ImageComponent}>
+                    <FlatList
+                        data={images}
+                        horizontal
+                        pagingEnabled
+                        onScroll={onScroll}
+                        scrollEventThrottle={16}
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={(_, index) => index.toString()}
+                        getItemLayout={(_, index) => ({
+                            length: 384,       // width of each item
+                            offset: 384 * index,
+                            index,
+                        })}
+                        renderItem={({ item, index }) => (
+                            <View style={styles.ImageRender}>
+                                <Image source={{ uri: item }} style={styles.Image} resizeMode="cover" />
+                            </View>
+                        )}
+                    />
+                    {/* Dots Indicator */}
+                    <View style={styles.scrollIndicator}>
+                        <View style={styles.IndicatorDotContainer}>
+                            {images.map((_:string, index:number) => (
+                                <View
+                                    key={index}
+                                    style={{
+                                        width: currentImageIndex === index ? 10 : 6,
+                                        height: 6,
+                                        borderRadius: currentImageIndex === index ? 4 : 10,
+                                        marginHorizontal: 2,
+                                        backgroundColor: currentImageIndex === index ? 'white' : '#bebebeff',
+                                    }}
+                                />
+                            ))}
+                        </View>
                     </View>
                 </View>
-                {/* Main Image Component */}
-                <Image source={{ uri: product.image }} style={styles.ImageSection} />
             </View>
             {/* Detail Content */}
             <View style={styles.ProductDetailsSection}>
                 <View style={styles.priceSection}>
                     <TextScallingFalse style={styles.priceSectionText}>Rs {product.price}</TextScallingFalse>
-                    <TextScallingFalse style={styles.priceSectionText}>{product.discount}</TextScallingFalse>
+                    <TextScallingFalse style={styles.priceSectionText}>-{product.discount}</TextScallingFalse>
                 </View>
                 <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.productName}>{product.name}</TextScallingFalse>
                 <TextScallingFalse style={styles.descriptionText}>{product.description}</TextScallingFalse>
@@ -59,14 +95,14 @@ const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, products
             <View style={styles.specificDetailsContainer}>
                 <View style={styles.specificDetailsBox}>
                     <View>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Brand - Souled store</TextScallingFalse>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Color - Dark Pink</TextScallingFalse>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Material - Cotton</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Brand - {product.details.brand}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Color - {product.details.color}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Material - {product.details.material}</TextScallingFalse>
                     </View>
                     <View>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Category - Dresses</TextScallingFalse>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Condition - Good</TextScallingFalse>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Size - M</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Category - {product.details.category}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Condition - {product.details.condition}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Size - {product.details.size}</TextScallingFalse>
                     </View>
                 </View>
             </View>
@@ -86,11 +122,19 @@ const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, products
             <View style={styles.deliveryContainer}>
                 <TextScallingFalse style={styles.DeliveryHeaderText}>Delivery</TextScallingFalse>
                 <View style={styles.DeliveryBlocks}>
-                    <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.AdressText}>49/2 - Green Park, Rajbari, Gorabazar, Dum Dum</TextScallingFalse>
+                    {isPreview ? (
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.AdressText}>Address of the user</TextScallingFalse>
+                    ) : (
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.AdressText}>49/2 - Green Park, Rajbari, Gorabazar, Dum Dum</TextScallingFalse>
+                    )}
                 </View>
                 <View style={[styles.DeliveryBlocks, styles.ExpectedDateBlock]}>
                     <DeliveryBoxIcon />
-                    <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.ExpectedDateText}>Expected Time:- Get it by Sun, Sep 14, 2025</TextScallingFalse>
+                    {isPreview ? (
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.ExpectedDateText}>Expected Delivery date and time</TextScallingFalse>
+                    ) : (
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.ExpectedDateText}>Expected Time:- Get it by Sun, Sep 14, 2025</TextScallingFalse>
+                    )}
                 </View>
                 <View style={styles.CashOnDeliveryContainer}>
                     <View style={styles.TickMarkContainer}>
@@ -110,8 +154,19 @@ const styles = StyleSheet.create({
     ProductImageContainer: {
         width: '100%',
         height: 494,
-        backgroundColor: 'yellow',
         marginVertical: 10
+    },
+    ImageRender: {
+        width: 384,
+        height: 494
+    },
+    IndicatorDotContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center'
+    },
+    ImageComponent: {
+        position: 'absolute',
+        top: 0
     },
     TopBarContainer: {
         zIndex: 10,
@@ -121,6 +176,10 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         alignItems: 'center'
+    },
+    Image: {
+        width: '100%',
+        height: '100%'
     },
     TopBarButtons: {
         backgroundColor: 'grey',
@@ -133,6 +192,14 @@ const styles = StyleSheet.create({
     TopBarRightSideSection: {
         flexDirection: 'row',
         gap: 10
+    },
+    scrollIndicator: {
+        width: '100%',
+        position: 'absolute',
+        bottom: 0,
+        paddingVertical: 20,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     ImageSection: {
         width: '100%',
@@ -187,7 +254,7 @@ const styles = StyleSheet.create({
         color: 'black',
         fontSize: 13,
         fontWeight: '500',
-        width: 142
+        width: 142,
     },
     SellerDetails: {
         width: '100%',
@@ -225,44 +292,42 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     ExpectedDateBlock: {
-        color: 'black',
-        fontSize: 14,
-        fontWeight: '500',
         paddingVertical: 4,
         flexDirection: 'row',
-        gap: 10,
+        gap: 7,
     },
     AdressText: {
         color: '#404040',
         width: '90%',
         fontSize: 14,
-        fontWeight: '400'
+        fontWeight: '400',
+        textAlign:'center'
     },
     ExpectedDateText: {
         color: 'black',
         fontSize: 14,
         fontWeight: '500',
-        width: '80%',
+        textAlign:'center',
     },
-    CashOnDeliveryContainer:{
-        flexDirection: 'row', 
-        alignItems:'center', 
-        gap: 7, 
+    CashOnDeliveryContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 7,
         paddingHorizontal: 2
     },
-    TickMarkContainer:{
-        width: 32, 
-        height: 32, 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        flexDirection: 'row', 
-        borderWidth: 1, 
-        borderColor:'black', 
+    TickMarkContainer: {
+        width: 32,
+        height: 32,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+        borderWidth: 1,
+        borderColor: 'black',
         borderRadius: 100
     },
-    PayOnDeliveryText:{
-        fontSize: 16, 
-        fontWeight: '500', 
-        color: 'black' 
+    PayOnDeliveryText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: 'black'
     }
 })

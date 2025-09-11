@@ -4,20 +4,23 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from 'expo-router';
 import PageThemeView from '../../../../components/PageThemeView'
 import TextScallingFalse from '../../../../components/Texts/TextScallingFalse'
-import TickMarkIcon from '../../../../components/SvgIcons/GeneralIcons/TickMark'
-import BackIcon from '../../../../components/SvgIcons/GeneralIcons/BackIcon'
-import TickMarkWhiteIcon from '../../../../components/SvgIcons/GeneralIcons/TickMarkWhite'
 import ImageUploadIcon from '../../../../components/SvgIcons/Uploads/ImageUploadIcon'
 import FormInputSection from '../../../../components/InputSections/FormInputSection'
 import SmallInputSection from '../../../../components/InputSections/SmallInputSection';
-import FormNavBar from '../../../../components/RequiredNavBars/FormNavBar';
 import SellingFormHeaderBar from '../../../../components/RequiredHeaderBar/SellingFormHeaderBar';
-import PlusIcon from '../../../../components/SvgIcons/GeneralIcons/Plus';
 import AddMoreImageIcon from '../../../../components/SvgIcons/Uploads/AddMoreImages';
 import CrossIcon from '../../../../components/SvgIcons/GeneralIcons/CrossIcon';
+import { useDispatch } from 'react-redux'
+import { setFormData } from '../../../../reduxStore/slices/productFormSlice';
+import { useGetOptionalQuestionsQuery } from '../../../../reduxStore/api/SellingFormQuestions/optionalQuestions';
+import { useGetWrittenQuestionsQuery } from '../../../../reduxStore/api/SellingFormQuestions/writtenQuestions';
 
 const index = () => {
   const router = useRouter();
+  // Fetch from backend via Redux/RTK Query
+  const { data: optionalQuestions = [], isLoading, error } = useGetOptionalQuestionsQuery();
+  const { data: writtenQuestions = [], isLoading: writtenLoading, error: writtenError } = useGetWrittenQuestionsQuery();
+
   // useStates  
   const [images, setImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -29,41 +32,43 @@ const index = () => {
   const [selectedField, setSelectedField] = useState(""); // e.g., "Category", "Material"
   const [showOptions, setShowOptions] = useState(false);
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
-
   //useRefs
   const flatListRef = useRef<FlatList<any>>(null);
 
-  const optionalFields = [
-    "Category",
-    "Sub_Category",
-    "GenZ_Category",
-    "Size",
-    "Condition"
-  ];
+  // Build options map for easy lookup
+  const optionsData = optionalQuestions.reduce((acc, q) => {
+    acc[q.name] = q.options || [];
+    return acc;
+  }, {} as Record<string, string[]>);
 
-  // Demo options for now (can come from backend)
-  const optionsData: Record<string, string[]> = {
-    Category: ["Clothing", "Shoes", "Bags", "Electronics"],
-    Sub_Category: ["New", "Used", "Refurbished"],
-    GenZ_Category: ["New", "Used", "Refurbished"],
-    Size: ["S", "M", "L", "XL"],
-    Condition: ["Good", "Okay", "Normal", "Toned"],
-  };
+  // Normalize into array of strings for mapping
+  const questionFields = optionalQuestions.map(q => q.name);
+  //Normalize Written questions
+  const writtenData: {
+    name: string;
+    required: boolean;
+    keyboardType?: KeyboardTypeOptions;
+  }[] = writtenQuestions.map(q => ({
+    ...q,
+    keyboardType: ["default", "numeric", "email-address", "phone-pad", "number-pad", "decimal-pad"].includes(q.keyboardType || "")
+      ? (q.keyboardType as KeyboardTypeOptions)
+      : "default",
+  }));
 
-  const writtenData: { name: string; required: boolean; keyboardType?: KeyboardTypeOptions }[] = [
-    { name: "Brand", required: true, keyboardType: "default" },
-    { name: "Color", required: true, keyboardType: "default" },
-    { name: "Material", required: true, keyboardType: "default" },
-    { name: "HSN", required: false, keyboardType: "numeric" as KeyboardTypeOptions },
-    { name: "Weight", required: false, keyboardType: "numeric" as KeyboardTypeOptions },
-  ];
+  // Show loading or error states
+  if (isLoading) {
+    return <TextScallingFalse style={styles.WarningText}>Loading optional questions…</TextScallingFalse>;
+  }
+  if (error) {
+    return <TextScallingFalse style={styles.WarningText}>Failed to load questions</TextScallingFalse>;
+  }
 
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect: [3, 4],
       quality: 0.8,
     });
 
@@ -109,12 +114,14 @@ const index = () => {
   };
 
 
+  //Image Scroll Indicating function
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(
       event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width
     );
     setCurrentImageIndex(index);
   };
+
 
   // helper
   const isFilled = (v: unknown) =>
@@ -126,7 +133,7 @@ const index = () => {
   }, 0);
 
   // Count optional fields (selectedValues)
-  const filledOptionalCount = optionalFields.reduce((acc, name) => {
+  const filledOptionalCount = questionFields.reduce((acc, name) => {
     return acc + (isFilled(selectedValues[name]) ? 1 : 0);
   }, 0);
 
@@ -146,7 +153,7 @@ const index = () => {
 
   // Total fields (include 1 for image)
   const totalCount =
-    writtenData.length + optionalFields.length + 4 + 1; // +1 = Images field
+    writtenData.length + questionFields.length + 4 + 1; // +1 = Images field
 
   // --- Required checks ---
   // required written field names
@@ -163,7 +170,7 @@ const index = () => {
     isFilled(price) &&
     isFilled(productName) &&
     isFilled(description) &&
-    optionalFields.every(f => isFilled(selectedValues[f])) &&
+    questionFields.every(f => isFilled(selectedValues[f])) &&
     images.length > 0;
 
   // require at least one image
@@ -174,11 +181,30 @@ const index = () => {
     requiredWrittenFilled && otherRequiredFilled && imageRequiredFilled;
 
 
+  const dispatch = useDispatch();
+  const handlePreview = () => {
+    dispatch(setFormData({
+      images,
+      productName,
+      price,
+      originalPrice,
+      description,
+      writtenValues,
+      selectedValues,
+    }));
+
+    router.push('/preview'); // navigate to preview page
+  };
 
   return (
     <PageThemeView>
       {/* Header */}
-      <SellingFormHeaderBar filledCount={filledCount} totalCount={totalCount} allRequiredFilled={allRequiredFilled} />
+      <SellingFormHeaderBar
+        filledCount={filledCount}
+        totalCount={totalCount}
+        allRequiredFilled={allRequiredFilled}
+        onPreview={handlePreview}
+      />
       {/* Form Body */}
       <ScrollView contentContainerStyle={styles.ScrollView} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Image Upload Section */}
@@ -256,10 +282,10 @@ const index = () => {
 
         {/* Form section */}
         <View style={styles.FormSectionContainer}>
-          <FormInputSection label="Original Price" keyboardType="numeric" placeholder='Enter Price' placeholderTextColor={'grey'} value={originalPrice} onChangeText={setOriginalPrice} />
-          <FormInputSection label="Set Price" keyboardType="numeric" placeholder='Enter Price' placeholderTextColor={'grey'} value={productName} onChangeText={setProductName} />
-          <FormInputSection label="Product Name" placeholder='Enter Price' placeholderTextColor={'grey'} value={description} onChangeText={setDescription} />
-          <FormInputSection customStyle={{ height: 100 }} numberOfLines={4} label="Short Description" placeholder='Enter Price' placeholderTextColor={'grey'} value={price} onChangeText={setPrice} />
+          <FormInputSection label="Original Price" keyboardType="numeric" placeholderTextColor={'grey'} value={originalPrice} onChangeText={setOriginalPrice} />
+          <FormInputSection label="Set Price" keyboardType="numeric" placeholderTextColor={'grey'} value={price} onChangeText={setPrice} />
+          <FormInputSection label="Product Name" placeholderTextColor={'grey'} value={productName} onChangeText={setProductName} />
+          <FormInputSection multiline={true} customStyle={{ height: 100 }} numberOfLines={4} label="Short Description" placeholderTextColor={'grey'} value={description} onChangeText={setDescription} />
         </View>
 
         {/* Details filling section */}
@@ -282,7 +308,7 @@ const index = () => {
             </View>
             {/* Optional Part */}
             <View style={styles.OptionPart}>
-              {optionalFields.map((field) => (
+              {questionFields.map((field) => (
                 <SmallInputSection
                   key={field}
                   label={`${field}*`}
@@ -304,13 +330,12 @@ const index = () => {
         <Modal
           transparent
           visible={showOptions}
-          animationType="fade"
           onRequestClose={() => setShowOptions(false)}
         >
           <TouchableWithoutFeedback onPress={() => setShowOptions(false)}>
             <View style={styles.modalOverlay}>
-              <View style={styles.modalBox}>
-                {selectedField && optionsData[selectedField]?.map((item, index) => (
+              <ScrollView showsVerticalScrollIndicator={true} style={styles.modalBox}>
+                {selectedField && optionsData[selectedField]?.map((item: string, index: number) => (
                   <TouchableOpacity
                     key={index}
                     style={styles.option}
@@ -324,7 +349,7 @@ const index = () => {
                     </TextScallingFalse>
                   </TouchableOpacity>
                 ))}
-              </View>
+              </ScrollView>
             </View>
           </TouchableWithoutFeedback>
         </Modal>
@@ -387,23 +412,24 @@ const styles = StyleSheet.create({
     padding: 8,
     zIndex: 100
   },
-  scrollIndicator:{
-     width: '100%', 
-     position: 'absolute', 
-     bottom: 0, 
-     paddingVertical: 20, 
-     justifyContent: 'center', 
-     alignItems: 'center'
+  scrollIndicator: {
+    width: '100%',
+    position: 'absolute',
+    bottom: 0,
+    paddingVertical: 20,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
-  IndicatorDotContainer:{
-    flexDirection: 'row', 
-    justifyContent: 'center' 
+  IndicatorDotContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center'
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.3)",
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: '50%',
   },
   modalBox: {
     backgroundColor: "white",
@@ -506,5 +532,9 @@ const styles = StyleSheet.create({
   },
   OptionPart: {
     gap: 8
+  },
+  WarningText: {
+    color: 'black',
+    fontSize: 10
   }
 })

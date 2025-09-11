@@ -2,23 +2,24 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native'
 TextScallingFalse
 import React from 'react'
 import TextScallingFalse from '../Texts/TextScallingFalse'
-import TickMarkIcon from '../SvgIcons/GeneralIcons/TickMark'
 import TickMarkWhiteIcon from '../SvgIcons/GeneralIcons/TickMarkWhite'
 
 type Props = {
   filledCount: number;
   totalCount: number;
   allRequiredFilled: boolean;
+  onPreview: () => void; // handler for tickmark
 };
-
 
 const SellingFormHeaderBar: React.FC<Props> = ({
   filledCount,
   totalCount,
   allRequiredFilled,
+  onPreview
 }) => {
+
   return (
-        <View style={styles.headerContainer}>
+    <View style={styles.headerContainer}>
       <View style={styles.countContainer}>
         <TextScallingFalse style={styles.countText}>
           {filledCount}/{totalCount} fields
@@ -34,6 +35,7 @@ const SellingFormHeaderBar: React.FC<Props> = ({
           styles.tickMarkButton,
           { backgroundColor: allRequiredFilled ? "#FE386A" : "#afafafff" },
         ]}
+        onPress={onPreview}
       >
         <TickMarkWhiteIcon />
       </TouchableOpacity>
@@ -44,7 +46,7 @@ const SellingFormHeaderBar: React.FC<Props> = ({
 export default SellingFormHeaderBar
 
 const styles = StyleSheet.create({
-     headerContainer: {
+  headerContainer: {
     position: 'absolute',
     backgroundColor: 'white',
     top: 0,
