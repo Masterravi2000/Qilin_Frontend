@@ -1,8 +1,6 @@
 // reduxStore/api/writtenQuestions/writtenQuestions.ts
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-console.log("EXPO_PUBLIC_BASE_URL:", process.env.EXPO_PUBLIC_BASE_URL);
-
 export const writtenQuestionsApi = createApi({
   reducerPath: "writtenQuestionsApi",
   baseQuery: fetchBaseQuery({
