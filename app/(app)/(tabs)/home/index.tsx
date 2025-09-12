@@ -14,21 +14,35 @@ import { useGetProductsQuery } from '../../../../reduxStore/api/product/products
 const MemoizedProductCard = React.memo(ProductCard);
 
 type Product = {
-   _id: string;
+  _id: string;
   productName: string;
   description?: string;
   images: string[];
   price: string;
   originalPrice?: string;
-  selectedValues?: string; // JSON string
+  selectedValues?: string;
   writtenValues?: string;
+};
+
+type MappedProduct = {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  price: string;
+  discount: string;
+  category: string;
+  deliveryTime: string;
+  selectedValues: Record<string, any>; // parsed JSON
+  writtenValues: Record<string, any>;  // parsed JSON
 };
 
 const index = () => {
   const [page, setPage] = useState(1);
   const { data, error, isLoading, isFetching } = useGetProductsQuery({ page, limit: 10 });
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
 
-   const products = useMemo(() => {
+  const products: MappedProduct[] = useMemo(() => {
     return data?.products.map((item: Product) => {
       const selectedValues = item.selectedValues ? JSON.parse(item.selectedValues) : {};
       const writtenValues = item.writtenValues ? JSON.parse(item.writtenValues) : {};
@@ -49,6 +63,11 @@ const index = () => {
     }) || [];
   }, [data]);
 
+  const filteredProducts: MappedProduct[] = useMemo(() => {
+    if (!selectedCategory) return products;
+    return products.filter(product => product.selectedValues?.GenZ_Category === selectedCategory);
+  }, [products, selectedCategory]);
+
   const totalPages = data?.totalPages || 1;
 
   const loadMoreProducts = () => {
@@ -64,12 +83,12 @@ const index = () => {
   if (error) {
     return <TextScallingFalse>Error loading products</TextScallingFalse>;
   }
-  
+
 
   return (
     <PageThemeView>
       <FlatList
-        data={products}
+        data={filteredProducts}
         keyExtractor={(item) => item.id}
         renderItem={({ item }: { item: typeof products[number] }) => <MemoizedProductCard product={item} />}
         numColumns={2}
@@ -83,10 +102,15 @@ const index = () => {
             <TopHeaderBar />
             <HomeSearchBar />
             <HeroBanner />
-            <CategoryBar />
+            <CategoryBar selectedCategory={selectedCategory} onCategorySelect={setSelectedCategory} />
             <ProductBar />
           </>
         }
+        ListEmptyComponent={() => (
+          <TextScallingFalse style={styles.noProductAvilableText}>
+            No products available
+          </TextScallingFalse>
+        )}
         showsVerticalScrollIndicator={false}
         initialNumToRender={10}
         maxToRenderPerBatch={10}
@@ -115,5 +139,9 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 12,
     fontWeight: '400'
+  },
+  noProductAvilableText:{
+    textAlign: 'center', 
+    paddingVertical: 50
   }
 })

@@ -3,6 +3,7 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { productsApi } from "./api/product/productsApi";
+import { categoryApi } from "./api/filters/categoryApi";
 
 
 // import slices
@@ -14,6 +15,7 @@ import { writtenQuestionsApi } from "./api/SellingFormQuestions/writtenQuestions
 
 const rootReducer = combineReducers({
   productForm: productFormReducer, // add here
+  [categoryApi.reducerPath]: categoryApi.reducer,
 
     // RTK Query reducers
   [optionalQuestionsApi.reducerPath]: optionalQuestionsApi.reducer,
@@ -38,7 +40,8 @@ export const store = configureStore({
       // RTK Query middleware
       optionalQuestionsApi.middleware,
       writtenQuestionsApi.middleware,
-      productsApi.middleware
+      productsApi.middleware,
+      categoryApi.middleware
     ),
 });
 

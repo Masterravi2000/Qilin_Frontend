@@ -1,40 +1,43 @@
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native'
 import React, { useState } from 'react'
 import TextScallingFalse from '../Texts/TextScallingFalse'
+import { useGetHomeCategoriesQuery } from '../../reduxStore/api/filters/categoryApi'
 
-const CategoryBar = () => {
+type Props = {
+    selectedCategory: string | null;
+    onCategorySelect: (category: string | null) => void;
+};
+
+const CategoryBar: React.FC<Props> = ({ selectedCategory, onCategorySelect }) => {
     // States
-    const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
+    const { data , isLoading, isError } = useGetHomeCategoriesQuery();
+    const categories: string[] = data?.options || [];
+    if (isLoading) return <TextScallingFalse>Loading categories...</TextScallingFalse>;
+    if (isError) return <TextScallingFalse>Error loading categories</TextScallingFalse>;
 
-    const categories = [
-        { id: 1, name: "Streetwear" },
-        { id: 2, name: "Vintage" },
-        { id: 3, name: "Formal" },
-        { id: 4, name: "Casual" },
-        { id: 5, name: "Ethnic" },
-        { id: 6, name: "Ethnic" },
-        { id: 7, name: "Ethnic" },
-    ];
 
     return (
         <View style={styles.container}>
             {/* Category bar Heading */}
             <View style={styles.header}>
                 <TextScallingFalse style={styles.headerText}>Category</TextScallingFalse>
-                <TouchableOpacity activeOpacity={0.6} style={styles.Button}>
+                <TouchableOpacity onPress={() => onCategorySelect(null)} activeOpacity={0.6} style={styles.Button}>
                     <TextScallingFalse style={styles.ButtonText}>See All</TextScallingFalse>
                 </TouchableOpacity>
             </View>
             {/* Category Options Button */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.ScrollingView}>
-                {categories.map((category) => {
-                    const isSelected = selectedCategory === category.id
-                    return (
-                        <TouchableOpacity onPress={() => setSelectedCategory(category.id)} activeOpacity={0.5} key={category.id} style={[styles.optionButton, isSelected && styles.selectedButton]}>
-                            <TextScallingFalse style={[styles.buttonName, isSelected && styles.selectedText]}>{category.name}</TextScallingFalse>
-                        </TouchableOpacity>
-                    )
-                })}
+                {categories.map((category: string) => (
+                    <TouchableOpacity
+                        key={category}
+                        onPress={() => onCategorySelect(category)}
+                        style={[styles.optionButton, selectedCategory === category && styles.selectedButton]}
+                    >
+                        <TextScallingFalse style={[styles.buttonName, selectedCategory === category && styles.selectedText]}>
+                            {category}
+                        </TextScallingFalse>
+                    </TouchableOpacity>
+                ))}
             </ScrollView>
         </View>
     )
