@@ -1,4 +1,4 @@
-import { StyleSheet, Image, View, NativeSyntheticEvent, NativeScrollEvent, TouchableOpacity, FlatList} from 'react-native'
+import { StyleSheet, Image, View, NativeSyntheticEvent, NativeScrollEvent, TouchableOpacity, FlatList } from 'react-native'
 import React, { useState } from "react";
 import TextScallingFalse from '../Texts/TextScallingFalse';
 import { useRouter } from 'expo-router';
@@ -8,40 +8,67 @@ import DeliveryBoxIcon from '../SvgIcons/SpecialIcons/DeliveryBox';
 import TickMarkIcon from '../SvgIcons/GeneralIcons/TickMark';
 import CashIcon from '../SvgIcons/SpecialIcons/CashIcon';
 import ProductDetailNavBar from '../RequiredNavBars/ProductDetailNavBar';
+import { useGetProductByIdQuery } from '../../reduxStore/api/product/productsApi';
 
 interface ProductDetailsProps {
     productId: string;
-    products: Array<any>;
     isPreview?: boolean;
+    onUpload?: () => void;
+    isLoading?: boolean;
+    products?: Array<any>;
 }
 
-const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, products, isPreview = false}) => {
+const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, isPreview = false, onUpload, isLoading = false, products }) => {
     const router = useRouter();
-    const product = products.find((p) => p.id === productId);
-
     //useSates
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-    if (!product) {
-        return <TextScallingFalse>Product not found</TextScallingFalse>;
-    }
+    // ✅ Fetch product from backend only when isPreview is false
+    const { data: apiProduct, error, isLoading: productLoading } = useGetProductByIdQuery(productId, {
+        skip: isPreview
+    });
+    const product = isPreview ? products?.[0] : apiProduct;
+    if (productLoading) return <TextScallingFalse>Loading product...</TextScallingFalse>;
+    if (error || !product) return <TextScallingFalse>Product not found</TextScallingFalse>;
+
+    // for discount part
+    const discount = product.originalPrice
+        ? Math.round(((parseFloat(product.originalPrice) - parseFloat(product.price)) / parseFloat(product.originalPrice)) * 100)
+        : 0;
+
+    // parse the details in order to destrcuture them conditionally
+    const selectedValues = isPreview ? JSON.parse(product.selectedValues || '{}') : (product.selectedValues ? JSON.parse(product.selectedValues) : {});
+    const writtenValues = isPreview ? JSON.parse(product.writtenValues || '{}') : (product.writtenValues ? JSON.parse(product.writtenValues) : {});
+    const details = {
+        brand: writtenValues.Brand || 'N/A',
+        color: writtenValues.Color || 'N/A',
+        material: writtenValues.Material || 'N/A',
+        category: selectedValues.Category || 'N/A',
+        condition: selectedValues.Condition || 'N/A',
+        size: selectedValues.Size || 'N/A',
+    };
 
     //Image Scroll Indicating function
     const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         const index = Math.round(
             event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width
         );
-        setCurrentImageIndex(index);
+        if (index !== currentImageIndex) {
+            setCurrentImageIndex(index);
+        }
     };
 
-    const images = product.images && product.images.length ? product.images : [product.image || ''];
+    //image destrcuture
+    const images = product.images && product.images.length ? product.images : [];
+
+    console.log('flatlist scrolled 1 time page rendered')
 
     return (
         <View>
             {/* Product Image */}
             <View style={styles.ProductImageContainer}>
                 {/* Top Nav Bar */}
-                <ProductDetailNavBar isPreview={isPreview}/>
+                <ProductDetailNavBar onUpload={onUpload} isLoading={isLoading} isPreview={isPreview} />
                 {/* Main Image Component */}
                 <View style={styles.ImageComponent}>
                     <FlatList
@@ -66,7 +93,7 @@ const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, products
                     {/* Dots Indicator */}
                     <View style={styles.scrollIndicator}>
                         <View style={styles.IndicatorDotContainer}>
-                            {images.map((_:string, index:number) => (
+                            {images.map((_: string, index: number) => (
                                 <View
                                     key={index}
                                     style={{
@@ -86,23 +113,23 @@ const ProductDetailsCard: React.FC<ProductDetailsProps> = ({ productId, products
             <View style={styles.ProductDetailsSection}>
                 <View style={styles.priceSection}>
                     <TextScallingFalse style={styles.priceSectionText}>Rs {product.price}</TextScallingFalse>
-                    <TextScallingFalse style={styles.priceSectionText}>-{product.discount}</TextScallingFalse>
+                    <TextScallingFalse style={styles.priceSectionText}>-{discount}%</TextScallingFalse>
                 </View>
-                <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.productName}>{product.name}</TextScallingFalse>
+                <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.productName}>{product.productName}</TextScallingFalse>
                 <TextScallingFalse style={styles.descriptionText}>{product.description}</TextScallingFalse>
             </View>
             {/* specific details container */}
             <View style={styles.specificDetailsContainer}>
                 <View style={styles.specificDetailsBox}>
                     <View>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Brand - {product.details.brand}</TextScallingFalse>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Color - {product.details.color}</TextScallingFalse>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Material - {product.details.material}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Brand - {details.brand}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Color - {details.color}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Material - {details.material}</TextScallingFalse>
                     </View>
                     <View>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Category - {product.details.category}</TextScallingFalse>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Condition - {product.details.condition}</TextScallingFalse>
-                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Size - {product.details.size}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Category - {details.category}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Condition - {details.condition}</TextScallingFalse>
+                        <TextScallingFalse numberOfLines={1} ellipsizeMode="tail" style={styles.specificDetailsText}>Size - {details.size}</TextScallingFalse>
                     </View>
                 </View>
             </View>
@@ -301,13 +328,13 @@ const styles = StyleSheet.create({
         width: '90%',
         fontSize: 14,
         fontWeight: '400',
-        textAlign:'center'
+        textAlign: 'center'
     },
     ExpectedDateText: {
         color: 'black',
         fontSize: 14,
         fontWeight: '500',
-        textAlign:'center',
+        textAlign: 'center',
     },
     CashOnDeliveryContainer: {
         flexDirection: 'row',

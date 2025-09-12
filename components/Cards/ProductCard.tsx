@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native'
+import { StyleSheet, View, Image, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { useRouter } from 'expo-router';
 import TextScallingFalse from '../Texts/TextScallingFalse';
@@ -13,7 +13,8 @@ const ProductCard = ({ product }: { product: { id: string; description?: string,
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity onPress={handlePress} activeOpacity={0.7} style={styles.card}>
+            <TouchableOpacity onPress={handlePress} activeOpacity={0.8} style={styles.card}>
+                <Image source={{uri: product.image}} style={styles.Image}/>
             </TouchableOpacity>
             {/* Price and Discount Section */}
             <TouchableOpacity onPress={handlePress} activeOpacity={0.5} style={styles.PriceSection}>
@@ -38,6 +39,11 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: 'grey',
         borderRadius: 8,
+    },
+    Image:{
+        width: '100%', 
+        height: '100%', 
+        borderRadius: 8
     },
     text: {
         color: 'white',

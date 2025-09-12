@@ -23,6 +23,7 @@ const index = () => {
 
   // useStates  
   const [images, setImages] = useState<string[]>([]);
+  const [base64Images, setBase64Images] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [originalPrice, setOriginalPrice] = useState("");
   const [price, setPrice] = useState("");
@@ -83,7 +84,6 @@ const index = () => {
             animated: true,
           });
         });
-
         return updated;
       });
     }
@@ -291,6 +291,7 @@ const index = () => {
         {/* Details filling section */}
         <View style={styles.DetailsPartContainer}>
           <View style={styles.InnerContainer}>
+            <TextScallingFalse style={styles.CoreHeadingText}>Core details</TextScallingFalse>
             {/* Written Part */}
             <View style={styles.WriitenPart}>
               {writtenData.map((field) => (
@@ -373,6 +374,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     zIndex: 10
+  },
+  CoreHeadingText: {
+    color: 'black',
+    fontSize: 14,
+    fontWeight: '400'
   },
   addAndRemoveCompo: {
     paddingHorizontal: 6,

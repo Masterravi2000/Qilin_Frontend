@@ -1,30 +1,70 @@
-import { StyleSheet, View, FlatList, TouchableOpacity, Image } from 'react-native';
-import React from 'react';
+import { StyleSheet, View, FlatList } from 'react-native';
+import React, { useMemo } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import PageThemeView from '../../../components/PageThemeView';
 import TextScallingFalse from '../../../components/Texts/TextScallingFalse';
 import ProductDetailsCard from '../../../components/Cards/ProductDetailsCard';
-import { demoProducts } from '../Demo/demoProducts';
-import ShoppingBagIcon from '../../../components/SvgIcons/GeneralIcons/ShoppingBagIcon';
-import ShoppingNavBar from '../../../components/RequiredNavBars/ShoppingNavBar';
 import ProductCard from '../../../components/Cards/ProductCard';
+import ShoppingNavBar from '../../../components/RequiredNavBars/ShoppingNavBar';
+import { useGetProductsQuery } from '../../../reduxStore/api/product/productsApi';
+
+// Define Product type if needed
+type Product = {
+  _id: string;
+  productName: string;
+  description?: string;
+  images: string[];
+  price: string;
+  originalPrice?: string;
+  selectedValues?: string;
+  writtenValues?: string;
+};
 
 const ProductDetailPage = () => {
-
   const { id } = useLocalSearchParams<{ id: string }>();
-  const similarProducts = demoProducts.filter((p) => p.id !== id);
+
+  const { data, error, isLoading } = useGetProductsQuery({ page: 1, limit: 100 }); // Fetch many products
+
+  const products = useMemo(() => {
+    if (!data?.products) return [];
+    return data.products
+      .filter((item: Product) => item._id !== id) // Exclude current product
+      .map((item: Product) => {
+        const selectedValues = item.selectedValues ? JSON.parse(item.selectedValues) : {};
+        const writtenValues = item.writtenValues ? JSON.parse(item.writtenValues) : {};
+        return {
+          id: item._id,
+          name: item.productName,
+          description: item.description || '',
+          image: item.images && item.images.length > 0 ? item.images[0] : '',
+          price: item.price,
+          discount: item.originalPrice
+            ? `${Math.round(((parseFloat(item.originalPrice) - parseFloat(item.price)) / parseFloat(item.originalPrice)) * 100)}% off`
+            : 'No discount',
+          category: selectedValues.Category || 'General',
+          deliveryTime: '2 days delivery',
+          selectedValues,
+          writtenValues,
+        };
+      });
+  }, [data, id]);
+
+  if (isLoading) {
+    return <TextScallingFalse>Loading products...</TextScallingFalse>;
+  }
+
+  if (error) {
+    return <TextScallingFalse>Error loading products</TextScallingFalse>;
+  }
 
   return (
     <PageThemeView>
       <FlatList
-        data={similarProducts}
+        data={products}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={
           <View>
-            {/* Main Product Details */}
-            <ProductDetailsCard productId={id} products={demoProducts} />
-
-            {/* Title */}
+            <ProductDetailsCard productId={id} />
             <TextScallingFalse style={styles.similarTitle}>
               Similar Products
             </TextScallingFalse>
@@ -41,7 +81,6 @@ const ProductDetailPage = () => {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Fixed Bottom Nav Bar */}
       <View style={styles.BottomNavBarContainer}>
         <ShoppingNavBar />
       </View>
@@ -68,5 +107,5 @@ const styles = StyleSheet.create({
   row: {
     justifyContent: 'space-between',
     paddingHorizontal: 16
-  },
+  }
 });

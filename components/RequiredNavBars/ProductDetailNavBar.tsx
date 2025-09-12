@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import BackIcon from '../SvgIcons/GeneralIcons/BackIcon'
 import WishListIcon from '../SvgIcons/BottomNavBar/WishList'
@@ -9,9 +9,12 @@ import TickMarkWhiteIcon from '../SvgIcons/GeneralIcons/TickMarkWhite'
 
 interface ProductDetailNavBarProps {
     isPreview?: boolean;
+    onUpload?: () => void;
+    isLoading?: boolean;
 }
-const ProductDetailNavBar: React.FC<ProductDetailNavBarProps> = ({ isPreview = false }) => {
+const ProductDetailNavBar: React.FC<ProductDetailNavBarProps> = ({ isPreview = false, onUpload, isLoading = false }) => {
     const router = useRouter();
+
     return (
         <View style={styles.TopBarContainer}>
             <TouchableOpacity onPress={() => router.back()} activeOpacity={0.5} style={styles.TopBarButtons}>
@@ -33,9 +36,15 @@ const ProductDetailNavBar: React.FC<ProductDetailNavBarProps> = ({ isPreview = f
             )}
             {
                 isPreview ? (
-                    <TouchableOpacity style={[styles.TopBarButtons,{backgroundColor:'#FE386A'}]}>
-                        <TickMarkWhiteIcon />
-                    </TouchableOpacity>
+                    <>
+                        {isLoading ? (
+                            <ActivityIndicator size="small" color="grey" />
+                        ) : (
+                            <TouchableOpacity onPress={onUpload} disabled={isLoading} style={[styles.TopBarButtons, { backgroundColor: '#FE386A' }]}>
+                                <TickMarkWhiteIcon />
+                            </TouchableOpacity>
+                        )}
+                    </>
                 ) : (
                     null
                 )
