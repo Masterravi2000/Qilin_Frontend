@@ -1,4 +1,4 @@
-import { StyleSheet, Image, TouchableOpacity, NativeSyntheticEvent, NativeScrollEvent, KeyboardTypeOptions, FlatList, View, ScrollView, Modal, TouchableWithoutFeedback } from 'react-native'
+import { StyleSheet, Image, TouchableOpacity, Alert, Platform, NativeSyntheticEvent, NativeScrollEvent, KeyboardTypeOptions, FlatList, View, ScrollView, Modal, TouchableWithoutFeedback, ActivityIndicator } from 'react-native'
 import React, { useState, useRef } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from 'expo-router';
@@ -14,16 +14,18 @@ import { useDispatch } from 'react-redux'
 import { setFormData } from '../../../../reduxStore/slices/productFormSlice';
 import { useGetOptionalQuestionsQuery } from '../../../../reduxStore/api/SellingFormQuestions/optionalQuestions';
 import { useGetWrittenQuestionsQuery } from '../../../../reduxStore/api/SellingFormQuestions/writtenQuestions';
+import { useAiGenerateAttributesMutation, useAiUploadImagesMutation } from '../../../../reduxStore/api/SellingFormQuestions/sellingFormAutoFill';
 
 const index = () => {
   const router = useRouter();
   // Fetch from backend via Redux/RTK Query
   const { data: optionalQuestions = [], isLoading, error } = useGetOptionalQuestionsQuery();
   const { data: writtenQuestions = [], isLoading: writtenLoading, error: writtenError } = useGetWrittenQuestionsQuery();
+  const [aiUploadImages] = useAiUploadImagesMutation();
+  const [aiGenerateAttributes] = useAiGenerateAttributesMutation();
 
   // useStates  
   const [images, setImages] = useState<string[]>([]);
-  const [base64Images, setBase64Images] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [originalPrice, setOriginalPrice] = useState("");
   const [price, setPrice] = useState("");
@@ -32,6 +34,7 @@ const index = () => {
   const [writtenValues, setWrittenValues] = useState<Record<string, string>>({});
   const [selectedField, setSelectedField] = useState(""); // e.g., "Category", "Material"
   const [showOptions, setShowOptions] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   //useRefs
   const flatListRef = useRef<FlatList<any>>(null);
@@ -111,6 +114,65 @@ const index = () => {
 
       return updated;
     });
+  };
+
+
+  //function for ai auto fill
+  const handleAIFill = async () => {
+    if (images.length === 0) {
+      Alert.alert("Upload images first", "Please select at least one image to use AI auto-fill.");
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+      // 1️⃣ Prepare FormData
+      const formData = new FormData();
+      images.forEach((uri, index) => {
+        const filename = uri.split('/').pop() || `image${index}.jpg`;
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+        formData.append('images', {
+          uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+          name: filename,
+          type,
+        } as any);
+      });
+
+      // 2️⃣ Upload images to get Cloudinary URLs
+      const uploadResponse = await aiUploadImages(formData).unwrap();
+      const imageUrls = uploadResponse.urls;
+
+      // 3️⃣ Send URLs to AI to generate attributes
+      const aiResponse = await aiGenerateAttributes({ image_urls: imageUrls }).unwrap();
+      const attributes = aiResponse.attributes;
+
+      // 4️⃣ Fill your form state with AI response
+      if (attributes) {
+        questionFields.forEach(field => {
+          setSelectedValues(prev => ({
+            ...prev,
+            [field]: attributes[field] || "",
+          }));
+        });
+        const writtenFields = writtenQuestions.map(q => q.name);
+        writtenFields.forEach(field => {
+          setWrittenValues(prev => ({
+            ...prev,
+            [field]: attributes[field] || "",
+          }));
+        });
+
+        setProductName(attributes["Product Name"] || "");
+        setDescription(attributes["Short Description"] || "");
+      }
+      setAiLoading(false);
+
+    } catch (err) {
+      console.error("AI Auto-fill error:", err);
+      Alert.alert("AI Auto-fill failed", "Something went wrong while fetching AI data.");
+    }
   };
 
 
@@ -275,6 +337,31 @@ const index = () => {
                 <ImageUploadIcon />
                 <TextScallingFalse style={styles.ImageUploadText}>Click Here to</TextScallingFalse>
                 <TextScallingFalse style={styles.ImageUploadText}>Upload item image</TextScallingFalse>
+              </TouchableOpacity>
+            )
+          }
+        </View>
+
+        <View style={styles.AiOptionContainer}>
+          <TextScallingFalse style={styles.AiDescriptionText}>Try Ai auto fill which is based on your selected item images</TextScallingFalse>
+          {
+            aiLoading ? (
+              <View style={styles.LoaderContainer}>
+                <ActivityIndicator color={'#FE386A'} size={'small'} />
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={() => {
+                  if (images.length === 0) {
+                    alert("Please upload at least one image first!");
+                  } else {
+                    handleAIFill();
+                  }
+                }}
+                activeOpacity={0.7}
+                style={styles.AiButtonContainer}
+              >
+                <TextScallingFalse style={styles.AiText}>Ai</TextScallingFalse>
               </TouchableOpacity>
             )
           }
@@ -518,7 +605,6 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 18,
     gap: 6
   },
   DetailsPartContainer: {
@@ -542,5 +628,35 @@ const styles = StyleSheet.create({
   WarningText: {
     color: 'black',
     fontSize: 10
+  },
+  AiOptionContainer: {
+    width: '100%',
+    paddingVertical: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20
+  },
+  AiDescriptionText: {
+    color: 'black',
+    fontSize: 14,
+    fontWeight: '500',
+    width: '60%'
+  },
+  AiButtonContainer: {
+    paddingVertical: 5,
+    paddingHorizontal: 35,
+    borderRadius: 20,
+    backgroundColor: '#FE386A',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  AiText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '700'
+  },
+  LoaderContainer: {
+    width: 60,
+    justifyContent: 'center'
   }
 })

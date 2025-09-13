@@ -31,6 +31,7 @@ const SellingFormHeaderBar: React.FC<Props> = ({
 
       <TouchableOpacity
         activeOpacity={0.7}
+        disabled={!allRequiredFilled}
         style={[
           styles.tickMarkButton,
           { backgroundColor: allRequiredFilled ? "#FE386A" : "#afafafff" },
