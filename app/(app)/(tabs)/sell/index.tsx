@@ -185,7 +185,7 @@ const index = () => {
   };
 
 
-  // helper
+  // Counts & helper functions
   const isFilled = (v: unknown) =>
     v !== undefined && v !== null && String(v).trim() !== "";
 
@@ -342,6 +342,7 @@ const index = () => {
           }
         </View>
 
+        {/* Ai Option section */}
         <View style={styles.AiOptionContainer}>
           <TextScallingFalse style={styles.AiDescriptionText}>Try Ai auto fill which is based on your selected item images</TextScallingFalse>
           {
@@ -375,7 +376,7 @@ const index = () => {
           <FormInputSection multiline={true} customStyle={{ height: 100 }} numberOfLines={4} label="Short Description" placeholderTextColor={'grey'} value={description} onChangeText={setDescription} />
         </View>
 
-        {/* Details filling section */}
+        {/* Core Details section */}
         <View style={styles.DetailsPartContainer}>
           <View style={styles.InnerContainer}>
             <TextScallingFalse style={styles.CoreHeadingText}>Core details</TextScallingFalse>
