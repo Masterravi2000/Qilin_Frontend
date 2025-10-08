@@ -1,10 +1,14 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { StyleSheet, Text, TextInput, View } from 'react-native'
+import React, { useState } from 'react'
+import PageThemeView from '../../../../components/PageThemeView'
+import TextScallingFalse from '../../../../components/Texts/TextScallingFalse'
 
 const index = () => {
+  const [name, setName] = useState('');
+
   return (
-    <View style={{width:'100%', height:'100%', alignItems:'center', justifyContent:'center'}}>
-      <Text style={{color:'white', alignItems:'center'}}>Explore</Text>
+    <View style={{flex: 1, justifyContent:'center', alignItems:'center'}}>
+      <TextScallingFalse style={{color:'white', alignItems:'center'}}>Explore</TextScallingFalse>
     </View>
   )
 }

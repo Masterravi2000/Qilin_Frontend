@@ -36,6 +36,7 @@ const index = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
+  const dispatch = useDispatch();
   //useRefs
   const flatListRef = useRef<FlatList<any>>(null);
 
@@ -242,8 +243,6 @@ const index = () => {
   const allRequiredFilled =
     requiredWrittenFilled && otherRequiredFilled && imageRequiredFilled;
 
-
-  const dispatch = useDispatch();
   const handlePreview = () => {
     dispatch(setFormData({
       images,
